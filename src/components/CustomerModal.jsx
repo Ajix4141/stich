@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { validateCustomer } from '../utils/customerValidation';
 
-export default function CustomerModal({ customer, onSave, onClose }) {
+export default function CustomerModal({ customer, customers = [], onSave, onClose }) {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
 
@@ -10,7 +11,8 @@ export default function CustomerModal({ customer, onSave, onClose }) {
   }, [customer]);
 
   function handleSave() {
-    if (!name.trim()) { alert('Please enter a customer name.'); return; }
+    const error = validateCustomer({ name, phone, customers, editingId: customer?.id });
+    if (error) { alert(error); return; }
     onSave({ Name: name.trim(), Phone: phone.trim() });
   }
 
@@ -29,7 +31,7 @@ export default function CustomerModal({ customer, onSave, onClose }) {
               <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Ajit Mohalkar" />
             </div>
             <div className="fg">
-              <label>Phone</label>
+              <label>Phone *</label>
               <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="e.g. 9876543210" />
             </div>
           </div>

@@ -1,14 +1,7 @@
-export const SHIRT_FIELDS = ['chest', 'shoulder', 'sleeve', 'shirtlen', 'neck', 'waist'];
-export const PANT_FIELDS  = ['hip', 'waist', 'knee', 'inseam', 'seat', 'length'];
+import { SHIRT_FIELDS, PANT_FIELDS } from '../constants/fields';
 
-export const SHIRT_LABELS = {
-  chest: 'Chest', shoulder: 'Shoulder', sleeve: 'Sleeve',
-  shirtlen: 'Shirt Len', neck: 'Neck', waist: 'Waist',
-};
-export const PANT_LABELS = {
-  hip: 'Hip', waist: 'Waist', knee: 'Knee',
-  inseam: 'Inseam', seat: 'Seat', length: 'Length',
-};
+export const SHIRT_LABELS = Object.fromEntries(SHIRT_FIELDS.map(f => [f.key, f.label]));
+export const PANT_LABELS  = Object.fromEntries(PANT_FIELDS.map(f => [f.key, f.label]));
 
 export function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
