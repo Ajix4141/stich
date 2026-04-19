@@ -118,7 +118,7 @@ export default function App() {
       <div className="topbar">
         <div className="brand">
           <div className="brand-icon">✂️</div>
-          <div className="brand-name">Stitch<span>.</span></div>
+          <div className="brand-name">Stitch (HB Tailors)<span>.</span></div>
         </div>
         <span className={`save-badge${showSaveBadge ? ' show' : ''}`}>✓ Auto-saved</span>
         <button className="tbtn" onClick={exportBackup}>📥 Export</button>
