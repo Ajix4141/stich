@@ -127,7 +127,7 @@ export default function App() {
       </div>
 
       {/* Main */}
-      <div className="main">
+      <div className={`main${activeCustomer ? ' has-customer' : ''}`}>
 
         {/* Sidebar */}
         <div className="sidebar">
@@ -179,6 +179,7 @@ export default function App() {
         {/* Detail */}
         <DetailPanel
           customer={activeCustomer}
+          onBack={() => setActiveId(null)}
           onEdit={c => { setEditCustomer(c); setCustModalOpen(true); }}
           onAddOrder={openAddOrder}
           onEditOrder={openEditOrder}
