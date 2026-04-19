@@ -192,6 +192,7 @@ export default function App() {
       {custModalOpen && (
         <CustomerModal
           customer={editCustomer}
+          customers={customers}
           onSave={handleSaveCustomer}
           onClose={() => { setCustModalOpen(false); setEditCustomer(null); }}
         />

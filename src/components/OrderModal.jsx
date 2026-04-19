@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import ForAutocomplete from './ForAutocomplete';
-import { SHIRT_FIELDS, PANT_FIELDS, today } from '../utils/helpers';
+import { today } from '../utils/helpers';
+import { SHIRT_FIELDS, PANT_FIELDS } from '../constants/fields';
+import { validateOrder } from '../utils/orderValidation';
 
-const emptyShirt = () => Object.fromEntries(SHIRT_FIELDS.map(k => [k, '']));
-const emptyPant  = () => Object.fromEntries(PANT_FIELDS.map(k => [k, '']));
+const emptyShirt = () => Object.fromEntries(SHIRT_FIELDS.map(f => [f.key, '']));
+const emptyPant  = () => Object.fromEntries(PANT_FIELDS.map(f => [f.key, '']));
 
 export default function OrderModal({ customer, order, onSave, onClose }) {
   const [type, setType]       = useState('Shirt');
@@ -39,22 +41,23 @@ export default function OrderModal({ customer, order, onSave, onClose }) {
   }, [order, customer]);
 
   function prefillFromSaved(name, t) {
-    if (!name || !customer) return;
-    const sz = customer.Sizes || {};
+    const sz = customer?.Sizes || {};
     if (t === 'Shirt') {
-      const saved = sz.Shirts?.[name];
+      const saved = name && sz.Shirts?.[name];
       if (saved && Object.values(saved).some(Boolean)) {
         setShirtM({ ...emptyShirt(), ...saved });
         setPrefilled(true);
         return;
       }
+      setShirtM(emptyShirt());
     } else {
-      const saved = sz.Pants?.[name];
+      const saved = name && sz.Pants?.[name];
       if (saved && Object.values(saved).some(Boolean)) {
         setPantM({ ...emptyPant(), ...saved });
         setPrefilled(true);
         return;
       }
+      setPantM(emptyPant());
     }
     setPrefilled(false);
   }
@@ -69,10 +72,10 @@ export default function OrderModal({ customer, order, onSave, onClose }) {
   }
 
   function handleSave() {
-    if (!forName.trim()) { alert('Please enter who this order is for.'); return; }
-    const measurements = type === 'Shirt'
-      ? Object.fromEntries(Object.entries(shirtM).filter(([,v]) => v))
-      : Object.fromEntries(Object.entries(pantM).filter(([,v]) => v));
+    const error = validateOrder({ forName, qty, price, type, shirtM, pantM });
+    if (error) { alert(error); return; }
+    const mState = type === 'Shirt' ? shirtM : pantM;
+    const measurements = Object.fromEntries(Object.entries(mState).filter(([, v]) => v));
 
     const subKey = type === 'Shirt' ? 'Shirt Type' : 'Pant Type';
     const orderData = {
@@ -86,17 +89,6 @@ export default function OrderModal({ customer, order, onSave, onClose }) {
     };
     onSave(orderData, measurements, forName.trim(), type);
   }
-
-  const shirtFields = [
-    { key: 'chest', label: 'Chest' }, { key: 'shoulder', label: 'Shoulder' },
-    { key: 'sleeve', label: 'Sleeve' }, { key: 'shirtlen', label: 'Shirt Length' },
-    { key: 'neck', label: 'Neck' }, { key: 'waist', label: 'Waist' },
-  ];
-  const pantFields = [
-    { key: 'hip', label: 'Hip' }, { key: 'waist', label: 'Waist' },
-    { key: 'knee', label: 'Knee' }, { key: 'inseam', label: 'Inseam' },
-    { key: 'seat', label: 'Seat' }, { key: 'length', label: 'Length' },
-  ];
 
   return (
     <div className="overlay" onClick={e => e.target === e.currentTarget && onClose()}>
@@ -173,12 +165,13 @@ export default function OrderModal({ customer, order, onSave, onClose }) {
                 </span>
               </div>
               <div className="fr3">
-                {shirtFields.map(({ key, label }) => (
+                {SHIRT_FIELDS.map(({ key, label }) => (
                   <div className="fg" key={key}>
                     <label>{label}</label>
                     <input
                       type="text"
                       value={shirtM[key]}
+                      required={true}
                       onChange={e => setShirtM(m => ({ ...m, [key]: e.target.value }))}
                       placeholder={`e.g. 42"`}
                     />
@@ -198,7 +191,7 @@ export default function OrderModal({ customer, order, onSave, onClose }) {
                 </span>
               </div>
               <div className="fr3">
-                {pantFields.map(({ key, label }) => (
+                {PANT_FIELDS.map(({ key, label }) => (
                   <div className="fg" key={key}>
                     <label>{label}</label>
                     <input
