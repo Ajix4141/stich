@@ -1,0 +1,35 @@
+:root {
+  --bg: #f0ebe3;
+  --surface: #fff;
+  --surface2: #f7f4f0;
+  --surface3: #eee8e0;
+  --ink: #1c1917;
+  --ink2: #6b6560;
+  --ink3: #a8a29e;
+  --coral: #ff6b6b;
+  --teal: #00c9a7;
+  --amber: #ffbe0b;
+  --violet: #8b5cf6;
+  --sky: #38bdf8;
+  --border: #e5e0da;
+  --r: 16px;
+  --r-sm: 10px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  overflow: hidden;
+}
