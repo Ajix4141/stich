@@ -243,3 +243,60 @@
 .ac-name { font-family: 'Syne', sans-serif; font-size: .88rem; font-weight: 700; color: var(--ink); }
 .ac-hint { font-size: .68rem; color: var(--ink3); margin-top: 1px; }
 .ac-new { font-size: .78rem; color: var(--ink3); font-style: italic; padding: 8px 13px; }
+
+/* ── Back button (mobile only) ── */
+.mob-back { display: none; }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  /* Main layout: single column, toggle sidebar/detail */
+  .main { grid-template-columns: 1fr; }
+  .main:not(.has-customer) .detail { display: none; }
+  .main.has-customer .sidebar { display: none; }
+
+  /* Back button */
+  .mob-back {
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-bottom: 14px; padding: 7px 13px;
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: var(--r-sm); font-family: 'DM Sans', sans-serif;
+    font-size: .82rem; font-weight: 500; color: var(--ink2); cursor: pointer;
+  }
+
+  /* Topbar */
+  .topbar { padding: 9px 14px; gap: 8px; }
+  .save-badge { display: none; }
+
+  /* Detail */
+  .detail { padding: 16px 14px; }
+  .dh-name { font-size: 1.25rem; }
+
+  /* Tabs — full width, equal columns */
+  .tabs { width: 100%; }
+  .tab { flex: 1; padding: 7px 4px; font-size: .72rem; text-align: center; }
+
+  /* Card grid → single column */
+  .cg { grid-template-columns: 1fr; }
+
+  /* Sizes → 3 columns */
+  .sz-grid { grid-template-columns: repeat(3, 1fr); }
+
+  /* Order measurements → 2 columns */
+  .omeasure-grid { grid-template-columns: repeat(2, 1fr); }
+
+  /* Order head — name row on top */
+  .order-head { flex-wrap: wrap; gap: 6px; }
+  .ofor-block { width: 100%; order: -1; }
+
+  /* Order foot */
+  .order-foot { flex-wrap: wrap; justify-content: flex-start; }
+  .status-sel { flex: 1; min-width: 120px; }
+
+  /* Modal — slide up from bottom */
+  .overlay { padding: 0; align-items: flex-end; }
+  .modal { border-radius: 20px 20px 0 0; max-height: 90vh; }
+
+  /* Forms → stack columns */
+  .fr  { grid-template-columns: 1fr; }
+  .fr3 { grid-template-columns: 1fr 1fr; }
+}

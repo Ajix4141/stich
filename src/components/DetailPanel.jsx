@@ -117,7 +117,7 @@ function SizesTab({ customer }) {
   );
 }
 
-export default function DetailPanel({ customer, onEdit, onAddOrder, onEditOrder, onDeleteOrder, onStatusChange, onDeleteCustomer }) {
+export default function DetailPanel({ customer, onBack, onEdit, onAddOrder, onEditOrder, onDeleteOrder, onStatusChange, onDeleteCustomer }) {
   const [tab, setTab] = useState('overview');
 
   if (!customer) {
@@ -138,6 +138,7 @@ export default function DetailPanel({ customer, onEdit, onAddOrder, onEditOrder,
 
   return (
     <div className="detail">
+      <button className="mob-back" onClick={onBack}>← Customers</button>
       {/* Header */}
       <div className="dh">
         <div className={`dh-av ${avClass(customer.Name)}`}>{initials(customer.Name)}</div>
