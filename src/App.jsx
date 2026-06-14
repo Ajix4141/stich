@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './App.css';
 import { useCustomers } from './hooks/useCustomers';
-import { initials, avClass } from './utils/helpers';
+import { initials, avClass, fmtDate, statusClass, statusLabel } from './utils/helpers';
 import CustomerModal from './components/CustomerModal';
 import OrderModal from './components/OrderModal';
 import DetailPanel from './components/DetailPanel';
@@ -28,9 +28,36 @@ export default function App() {
   const fileInputRef = useRef(null);
 
   const activeCustomer = customers.find(c => c.id === activeId) || null;
-  const filtered = customers.filter(c =>
-    c.Name?.toLowerCase().includes(search.toLowerCase())
-  );
+
+  function earliestPendingOrder(c) {
+    return (c.Orders || [])
+      .filter(o => o.Status !== 'Delivered' && o.DeliveryDate)
+      .sort((a, b) => a.DeliveryDate.localeCompare(b.DeliveryDate))[0] || null;
+  }
+
+  function customerFinancials(c) {
+    let total = 0, due = 0;
+    for (const o of (c.Orders || [])) {
+      const t = (parseFloat(o.PricePerItem) || 0) * (parseFloat(o.Quantity) || 1);
+      const d = t - (parseFloat(o.Paid) || 0);
+      if (o.Status !== 'Delivered' || d > 0) {
+        total += t;
+        due   += Math.max(0, d);
+      }
+    }
+    return { total, due };
+  }
+
+  const filtered = customers
+    .filter(c => c.Name?.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => {
+      const da = earliestPendingOrder(a)?.DeliveryDate || null;
+      const db = earliestPendingOrder(b)?.DeliveryDate || null;
+      if (!da && !db) return 0;
+      if (!da) return 1;
+      if (!db) return -1;
+      return da.localeCompare(db);
+    });
 
   function flashSaved() {
     setShowSaveBadge(true);
@@ -140,7 +167,6 @@ export default function App() {
               <span className="s-icon">⌕</span>
               <input
                 type="text"
-                placeholder="Search by name…"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
               />
@@ -157,21 +183,58 @@ export default function App() {
                 <p>{search ? 'No customer found.' : 'No customers yet.\nAdd your first one!'}</p>
               </div>
             ) : (
-              filtered.map(c => (
-                <div
-                  key={c.id}
-                  className={`cust-row${c.id === activeId ? ' active' : ''}`}
-                  onClick={() => setActiveId(c.id)}
-                >
-                  <div className={`av ${avClass(c.Name)}`}>{initials(c.Name)}</div>
-                  <div className="ci">
-                    <div className="cn">{c.Name}</div>
-                    <div className="cs">
-                      {c.Phone || 'No phone'} · {(c.Orders || []).length} order{(c.Orders || []).length !== 1 ? 's' : ''}
+              filtered.map(c => {
+                const { total, due } = customerFinancials(c);
+                const orders = (c.Orders || [])
+                  .map(o => {
+                    const t = (parseFloat(o.PricePerItem) || 0) * (parseFloat(o.Quantity) || 1);
+                    const d = Math.max(0, t - (parseFloat(o.Paid) || 0));
+                    return { ...o, _total: t, _due: d };
+                  })
+                  .filter(o => o.Status !== 'Delivered' || o._due > 0)
+                  .sort((a, b) => (a.DeliveryDate || '').localeCompare(b.DeliveryDate || ''));
+                return (
+                  <div
+                    key={c.id}
+                    className={`cust-row${c.id === activeId ? ' active' : ''}`}
+                    onClick={() => setActiveId(c.id)}
+                  >
+                    <div className={`av ${avClass(c.Name)}`}>{initials(c.Name)}</div>
+                    <div className="ci">
+                      <div className="cn-row">
+                        <span className="cn">{c.Name}</span>
+                      </div>
+                      {orders.length === 0
+                        ? <div className="cs">{c.Phone || 'No phone'} · 0 orders</div>
+                        : orders.map(o => (
+                            <div key={o.id} className="cs-order-row">
+                              <span className="cs-order-date">
+                                {o.DeliveryDate ? `📅 ${fmtDate(o.DeliveryDate)}` : 'No date'}
+                              </span>
+                              <span className="cs-order-qty">×{o.Quantity || 1}</span>
+                              <span className={`ostatus ${statusClass(o.Status || 'Pending')}`}>
+                                {statusLabel(o.Status || 'Pending')}
+                              </span>
+                              {o._due > 0
+                                ? <span className="cs-order-due">₹{o._due.toLocaleString('en-IN')} due</span>
+                                : <span className="cs-order-paid">Paid</span>
+                              }
+                            </div>
+                          ))
+                      }
+                      {total > 0 && (
+                        <div className="cs-fin">
+                          <span>₹{total.toLocaleString('en-IN')}</span>
+                          {due > 0
+                            ? <span className="cs-due">₹{due.toLocaleString('en-IN')} due</span>
+                            : <span className="cs-paid">Fully paid</span>
+                          }
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>

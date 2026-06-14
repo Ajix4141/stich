@@ -54,7 +54,6 @@ export default function ForAutocomplete({ customer, value, onChange, onSelect })
       <input
         type="text"
         value={value}
-        placeholder="e.g. Ajit, Sagar…"
         autoComplete="off"
         onChange={e => { onChange(e.target.value); setOpen(true); setFocusIdx(-1); }}
         onFocus={() => setOpen(true)}

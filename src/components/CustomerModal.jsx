@@ -28,11 +28,11 @@ export default function CustomerModal({ customer, customers = [], onSave, onClos
           <div className="fr">
             <div className="fg">
               <label>Full Name *</label>
-              <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Ajit Mohalkar" />
+              <input value={name} onChange={e => setName(e.target.value)} />
             </div>
             <div className="fg">
               <label>Phone *</label>
-              <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="e.g. 9876543210" />
+              <input value={phone} onChange={e => setPhone(e.target.value)} />
             </div>
           </div>
           <div className="mfoot">

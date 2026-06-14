@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import ForAutocomplete from './ForAutocomplete';
 import { today } from '../utils/helpers';
 import { SHIRT_FIELDS, PANT_FIELDS } from '../constants/fields';
@@ -13,11 +13,14 @@ export default function OrderModal({ customer, order, onSave, onClose }) {
   const [subtype, setSubtype] = useState('');
   const [qty, setQty]         = useState('');
   const [price, setPrice]     = useState('');
-  const [date, setDate]       = useState(today());
-  const [status, setStatus]   = useState('Pending');
+  const [paid, setPaid]       = useState('');
+  const [date, setDate]             = useState(today());
+  const [deliveryDate, setDelivery] = useState('');
+  const [status, setStatus]         = useState('Pending');
   const [shirtM, setShirtM]   = useState(emptyShirt());
   const [pantM, setPantM]     = useState(emptyPant());
   const [prefilled, setPrefilled] = useState(false);
+  const [notes, setNotes]     = useState('');
 
   // Populate form when editing an existing order
   useEffect(() => {
@@ -26,9 +29,12 @@ export default function OrderModal({ customer, order, onSave, onClose }) {
       setForName(order.Sizes || '');
       setSubtype(order['Shirt Type'] || order['Pant Type'] || '');
       setQty(order.Quantity || '');
-      setPrice(order.Price || '');
+      setPrice(order.PricePerItem || '');
+      setPaid(order.Paid || '');
       setDate(order.Date || today());
+      setDelivery(order.DeliveryDate || '');
       setStatus(order.Status || 'Pending');
+      setNotes(order.Notes || '');
       const m = order.measurements || {};
       if (order.Type === 'Shirt') setShirtM({ ...emptyShirt(), ...m });
       else setPantM({ ...emptyPant(), ...m });
@@ -72,7 +78,7 @@ export default function OrderModal({ customer, order, onSave, onClose }) {
   }
 
   function handleSave() {
-    const error = validateOrder({ forName, qty, price, type, shirtM, pantM });
+    const error = validateOrder({ forName, qty, price, deliveryDate, type, shirtM, pantM });
     if (error) { alert(error); return; }
     const mState = type === 'Shirt' ? shirtM : pantM;
     const measurements = Object.fromEntries(Object.entries(mState).filter(([, v]) => v));
@@ -83,9 +89,12 @@ export default function OrderModal({ customer, order, onSave, onClose }) {
       [subKey]: subtype,
       Sizes: forName.trim(),
       Quantity: qty,
-      Price: price,
+      PricePerItem: price,
+      Paid: paid,
       Date: date || today(),
+      DeliveryDate: deliveryDate,
       Status: status || 'Pending',
+      Notes: notes.trim(),
     };
     onSave(orderData, measurements, forName.trim(), type);
   }
@@ -125,26 +134,32 @@ export default function OrderModal({ customer, order, onSave, onClose }) {
             </div>
             <div className="fg">
               <label>Quantity</label>
-              <input type="number" value={qty} onChange={e => setQty(e.target.value)} placeholder="1" min="1" />
+              <input type="number" value={qty} onChange={e => setQty(e.target.value)} min="1" />
             </div>
           </div>
 
           <div className="fr" style={{ marginTop: 10 }}>
             <div className="fg">
               <label>{type === 'Shirt' ? 'Shirt Type' : 'Pant Type'}</label>
-              <input value={subtype} onChange={e => setSubtype(e.target.value)} placeholder="e.g. Formal, Kurta, Casual…" />
+              <input value={subtype} onChange={e => setSubtype(e.target.value)} />
             </div>
             <div className="fg">
-              <label>Price</label>
-              <input value={price} onChange={e => setPrice(e.target.value)} placeholder="e.g. 1500 Rs" />
+              <label>Price per Item *</label>
+              <input type="number" min="0" value={price} onChange={e => setPrice(e.target.value)} />
             </div>
           </div>
 
           <div className="fr" style={{ marginTop: 10 }}>
             <div className="fg">
-              <label>Date</label>
+              <label>Order Date</label>
               <input type="date" value={date} onChange={e => setDate(e.target.value)} />
             </div>
+            <div className="fg">
+              <label>Delivery Date *</label>
+              <input type="date" value={deliveryDate} onChange={e => setDelivery(e.target.value)} min={date} />
+            </div>
+          </div>
+          <div className="fr" style={{ marginTop: 10 }}>
             <div className="fg">
               <label>Status</label>
               <select value={status} onChange={e => setStatus(e.target.value)}>
@@ -154,6 +169,31 @@ export default function OrderModal({ customer, order, onSave, onClose }) {
               </select>
             </div>
           </div>
+
+          {/* Payment */}
+          {(() => {
+            const total     = (parseFloat(qty) || 0) * (parseFloat(price) || 0);
+            const remaining = total - (parseFloat(paid) || 0);
+            return (
+              <>
+                <div className="fsec">Payment</div>
+                <div className="fr3">
+                  <div className="fg">
+                    <label>Total Amount</label>
+                    <input className="computed" readOnly value={total > 0 ? `₹${total.toLocaleString('en-IN')}` : '—'} />
+                  </div>
+                  <div className="fg">
+                    <label>Payment Done</label>
+                    <input type="number" min="0" value={paid} onChange={e => setPaid(e.target.value)} />
+                  </div>
+                  <div className="fg">
+                    <label>Remaining</label>
+                    <input className={`computed${remaining > 0 ? ' remaining' : ''}`} readOnly value={total > 0 ? `₹${remaining.toLocaleString('en-IN')}` : '—'} />
+                  </div>
+                </div>
+              </>
+            );
+          })()}
 
           {/* Shirt measurements */}
           {type === 'Shirt' && (
@@ -173,7 +213,6 @@ export default function OrderModal({ customer, order, onSave, onClose }) {
                       value={shirtM[key]}
                       required={true}
                       onChange={e => setShirtM(m => ({ ...m, [key]: e.target.value }))}
-                      placeholder={`e.g. 42"`}
                     />
                   </div>
                 ))}
@@ -198,13 +237,22 @@ export default function OrderModal({ customer, order, onSave, onClose }) {
                       type="text"
                       value={pantM[key]}
                       onChange={e => setPantM(m => ({ ...m, [key]: e.target.value }))}
-                      placeholder={`e.g. 34"`}
                     />
                   </div>
                 ))}
               </div>
             </>
           )}
+
+          {/* Notes */}
+          <div className="fsec">Notes</div>
+          <div className="fg full">
+            <textarea
+              rows={3}
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+            />
+          </div>
 
           <div className="mfoot">
             <button className="abtn" onClick={onClose}>Cancel</button>
